@@ -8,6 +8,7 @@ import net.sf.xenqtt.client.Subscription;
 import net.sf.xenqtt.message.ConnectReturnCode;
 import net.sf.xenqtt.message.QoS;
 import org.graylog2.plugin.buffers.Buffer;
+import org.graylog2.plugin.configuration.Configuration;
 import org.graylog2.plugin.configuration.ConfigurationException;
 import org.graylog2.plugin.configuration.ConfigurationRequest;
 import org.graylog2.plugin.configuration.fields.ConfigurationField;
@@ -39,7 +40,7 @@ public class MQTTInput extends MessageInput {
     }
 
     @Override
-    public void checkConfiguration() throws ConfigurationException {
+    public void checkConfiguration(Configuration configuration) throws ConfigurationException {
         try {
             if (configuration.getString("brokerUrl") == null || configuration.getString("brokerUrl").isEmpty()
                 || configuration.getString("topic") == null || configuration.getString("topic").isEmpty()
