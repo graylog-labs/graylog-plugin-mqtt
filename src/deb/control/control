@@ -1,0 +1,8 @@
+Package: input-mqtt
+Version: 1.0-SNAPSHOT
+Architecture: all
+Maintainer: info@example.com
+Section: web
+Priority: optional
+Depends: default-jre-headless | default-jre, graylog2-server | graylog2-radio
+Description: Graylog2 input-mqtt plugin.
