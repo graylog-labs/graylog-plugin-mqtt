@@ -2,10 +2,11 @@ package org.graylog2.inputs.mqtt;
 
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
-import com.google.common.collect.Lists;
-import net.sf.xenqtt.client.*;
+import net.sf.xenqtt.client.AsyncClientListener;
+import net.sf.xenqtt.client.MqttClient;
+import net.sf.xenqtt.client.PublishMessage;
+import net.sf.xenqtt.client.Subscription;
 import net.sf.xenqtt.message.ConnectReturnCode;
-import net.sf.xenqtt.message.QoS;
 import org.graylog2.inputs.gelf.gelf.GELFParser;
 import org.graylog2.plugin.Message;
 import org.graylog2.plugin.buffers.Buffer;
@@ -15,32 +16,26 @@ import org.graylog2.plugin.inputs.MessageInput;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.List;
+import java.util.Arrays;
 
 import static com.codahale.metrics.MetricRegistry.name;
 
-/**
- * @author Dennis Oelkers <dennis@torch.sh>
- */
 public class AsyncMQTTClientListener implements AsyncClientListener {
     private static final Logger LOG = LoggerFactory.getLogger(AsyncMQTTClientListener.class);
 
     private final Buffer processBuffer;
     private final MessageInput messageInput;
-    private final List<String> topics;
     private final GELFParser gelfParser;
 
     private final Meter incomingMessages;
     private final Meter incompleteMessages;
     private final Meter processedMessages;
 
-    public AsyncMQTTClientListener(Buffer processBuffer,
-                                   MessageInput messageInput,
-                                   List<String> topics,
-                                   MetricRegistry metricRegistry) {
+    public AsyncMQTTClientListener(final Buffer processBuffer,
+                                   final MessageInput messageInput,
+                                   final MetricRegistry metricRegistry) {
         this.processBuffer = processBuffer;
         this.messageInput = messageInput;
-        this.topics = topics;
         this.gelfParser = new GELFParser(metricRegistry);
 
         final String metricName = messageInput.getUniqueReadableId();
@@ -52,62 +47,74 @@ public class AsyncMQTTClientListener implements AsyncClientListener {
 
     @Override
     public void connected(MqttClient mqttClient, ConnectReturnCode connectReturnCode) {
-        LOG.info("Connected to MQTT broker ...");
-        List<Subscription> subscriptions = Lists.newArrayList();
-        for (String topic : topics)
-            subscriptions.add(new Subscription(topic, QoS.EXACTLY_ONCE));
-        mqttClient.subscribe(subscriptions);
+        if (connectReturnCode == ConnectReturnCode.ACCEPTED) {
+            LOG.info("Connected MQTT client");
+        }
     }
 
     @Override
-    public void subscribed(MqttClient mqttClient, Subscription[] subscriptions, Subscription[] subscriptions2, boolean b) {
-        LOG.info("Subscribed to topics: " + subscriptions.toString());
-    }
-
-    @Override
-    public void unsubscribed(MqttClient mqttClient, String[] strings) {
-    }
-
-    @Override
-    public void published(MqttClient mqttClient, PublishMessage publishMessage) {
-    }
-
-    @Override
-    public void publishReceived(MqttClient mqttClient, PublishMessage publishMessage) {
-        LOG.debug("Received message: " + publishMessage.getPayloadString());
-        incomingMessages.mark();
-
-        if (publishMessage.getPayloadString() == null) {
-            LOG.debug("Received message is null. Not processing.");
-            return;
+    public void subscribed(final MqttClient mqttClient,
+                           final Subscription[] requestedSubscriptions,
+                           final Subscription[] grantedSubscriptions,
+                           final boolean requestsGranted) {
+        if (!requestsGranted) {
+            LOG.warn("Couldn't subscribe to all requested topics: {}", Arrays.toString(requestedSubscriptions));
         }
 
-        if (publishMessage.isDuplicate() || publishMessage.isEmpty()) {
-            LOG.debug("Received message is a duplicate or empty. Not processing.");
+        LOG.info("Subscribed to topics: {}", Arrays.toString(grantedSubscriptions));
+    }
+
+    @Override
+    public void unsubscribed(MqttClient mqttClient, String[] topics) {
+        LOG.info("Unsubscribed from topics: {}", Arrays.toString(topics));
+    }
+
+    @Override
+    public void published(MqttClient mqttClient, PublishMessage message) {
+        LOG.trace("Published message {}", message);
+    }
+
+    @Override
+    public void publishReceived(MqttClient mqttClient, PublishMessage message) {
+        LOG.debug("Received message: {}", message);
+        incomingMessages.mark();
+
+        if (message.isEmpty()) {
+            LOG.debug("Received message is empty. Not processing.");
             incompleteMessages.mark();
             return;
         }
 
-        Message message = gelfParser.parse(publishMessage.getPayloadString(), messageInput);
-        if (message == null) {
-            LOG.error("Unable to parse message received: ", publishMessage.getPayloadString());
+        if (message.isDuplicate()) {
+            LOG.debug("Received message is a duplicate. Not processing.");
+            incompleteMessages.mark();
+            return;
+        }
+
+        final Message gelfMessage;
+        try {
+            gelfMessage = gelfParser.parse(message.getPayloadString(), messageInput);
+        } catch (Exception e) {
+            LOG.warn("Unable to parse received message: {}", message);
             incompleteMessages.mark();
             return;
         }
 
         try {
-            LOG.debug("Parsed message successfully, message id: <{}>. Enqueuing into process buffer.", message.getId());
-            message.addField("_mqtt_topic", publishMessage.getTopic());
-            message.addField("_mqtt_received_timestamp", publishMessage.getReceivedTimestamp());
-            processBuffer.insertFailFast(message, messageInput);
-            publishMessage.ack();
+            LOG.debug("Parsed message successfully, message id: <{}>. Enqueuing into process buffer.", gelfMessage.getId());
+            gelfMessage.addField("_mqtt_topic", message.getTopic());
+            gelfMessage.addField("_mqtt_received_timestamp", message.getReceivedTimestamp());
+            processBuffer.insertFailFast(gelfMessage, messageInput);
+            message.ack();
             processedMessages.mark();
         } catch (BufferOutOfCapacityException | ProcessingDisabledException e) {
             LOG.error("Unable to insert message into process buffer: ", e);
+            incompleteMessages.mark();
         }
     }
 
     @Override
-    public void disconnected(MqttClient mqttClient, Throwable throwable, boolean b) {
+    public void disconnected(final MqttClient client, final Throwable cause, final boolean reconnecting) {
+        LOG.info("Disconnected MQTT client", cause);
     }
 }
