@@ -158,7 +158,7 @@ public class MQTTInput extends MessageInput {
 
         cr.addField(new TextField(CK_BROKER_URL,
                 "Broker URL",
-                "tcp://localhost:8083",
+                "tcp://localhost:1883",
                 "This is the URL of the MQTT broker."));
 
         cr.addField(new TextField(CK_USE_AUTH,
