@@ -57,6 +57,12 @@
             <artifactId>graylog2-inputs</artifactId>
             <version>${graylog2.version}</version>
             <scope>provided</scope>
+            <exclusions>
+                <exclusion>
+                    <artifactId>log4j</artifactId>
+                    <groupId>log4j</groupId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
@@ -73,6 +79,12 @@
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-simple</artifactId>
+            <version>1.7.7</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>log4j-over-slf4j</artifactId>
             <version>1.7.7</version>
             <scope>test</scope>
         </dependency>
