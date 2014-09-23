@@ -17,6 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
+import java.util.List;
 
 import static com.codahale.metrics.MetricRegistry.name;
 
@@ -25,6 +26,7 @@ public class AsyncMQTTClientListener implements AsyncClientListener {
 
     private final Buffer processBuffer;
     private final MessageInput messageInput;
+    private final List<Subscription> subscriptions;
     private final GELFParser gelfParser;
 
     private final Meter incomingMessages;
@@ -33,9 +35,11 @@ public class AsyncMQTTClientListener implements AsyncClientListener {
 
     public AsyncMQTTClientListener(final Buffer processBuffer,
                                    final MessageInput messageInput,
+                                   final List<Subscription> subscriptions,
                                    final MetricRegistry metricRegistry) {
         this.processBuffer = processBuffer;
         this.messageInput = messageInput;
+        this.subscriptions = subscriptions;
         this.gelfParser = new GELFParser(metricRegistry);
 
         final String metricName = messageInput.getUniqueReadableId();
@@ -46,9 +50,13 @@ public class AsyncMQTTClientListener implements AsyncClientListener {
     }
 
     @Override
-    public void connected(MqttClient mqttClient, ConnectReturnCode connectReturnCode) {
-        if (connectReturnCode == ConnectReturnCode.ACCEPTED) {
+    public void connected(MqttClient client, ConnectReturnCode returnCode) {
+        if (returnCode == ConnectReturnCode.ACCEPTED) {
             LOG.info("Connected MQTT client");
+
+            client.subscribe(subscriptions);
+        } else {
+            LOG.error("MQTT client not connected! Reason: {}", returnCode);
         }
     }
 

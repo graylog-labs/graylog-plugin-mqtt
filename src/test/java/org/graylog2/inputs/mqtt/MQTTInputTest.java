@@ -124,31 +124,6 @@ public class MQTTInputTest {
     }
 
     @Test
-    @SuppressWarnings("unchecked")
-    public void launchSubscribesToTopics() throws MisfireException {
-        final Configuration configuration = new Configuration(VALID_CONFIG_MAP);
-        final MqttClient client = mock(MqttClient.class);
-        final Buffer processBuffer = mock(Buffer.class);
-        final MQTTInput input = new MQTTInput(new MetricRegistry(), nodeId, client, null);
-        when(client.connect("graylog2-" + nodeId, true, "TEST-username", "TEST-password")).thenReturn(null);
-
-        input.initialize(configuration);
-        input.setConfiguration(VALID_CONFIGURATION);
-        input.launch(processBuffer);
-
-        final ArgumentCaptor<List> argumentCaptor = ArgumentCaptor.forClass(List.class);
-
-        verify(client).subscribe((List<Subscription>) argumentCaptor.capture());
-        assertThat(argumentCaptor.getValue().size(), is(2));
-
-        final List<Subscription> subscriptions = argumentCaptor.getValue();
-        assertThat(subscriptions.get(0).getTopic(), equalTo("test1"));
-        assertThat(subscriptions.get(0).getQos(), equalTo(QoS.EXACTLY_ONCE));
-        assertThat(subscriptions.get(1).getTopic(), equalTo("test2"));
-        assertThat(subscriptions.get(1).getQos(), equalTo(QoS.EXACTLY_ONCE));
-    }
-
-    @Test
     public void testLaunch() throws MisfireException {
         final ImmutableMap<String, Object> configMap = ImmutableMap.<String, Object>builder()
                             .put("brokerUrl", "tcp://iot.eclipse.org:1883")

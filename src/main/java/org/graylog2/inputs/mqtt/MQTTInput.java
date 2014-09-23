@@ -113,10 +113,7 @@ public class MQTTInput extends MessageInput {
 
             if (returnCode != null) {
                 LOG.error("Unable to connect to the MQTT broker. Reason: " + returnCode);
-                return;
             }
-
-            client.subscribe(buildSubscriptions());
         } catch (Exception ex) {
             LOG.error("An unexpected exception has occurred.", ex);
         }
@@ -125,7 +122,7 @@ public class MQTTInput extends MessageInput {
     private List<Subscription> buildSubscriptions() {
         final ImmutableList.Builder<Subscription> subscriptions = ImmutableList.builder();
         for (String topic : topics) {
-            subscriptions.add(new Subscription(topic, QoS.EXACTLY_ONCE));
+            subscriptions.add(new Subscription(topic, QoS.AT_LEAST_ONCE));
         }
 
         return subscriptions.build();
@@ -134,7 +131,8 @@ public class MQTTInput extends MessageInput {
     private MqttClient buildClient(Buffer processBuffer) {
         final String brokerUrl = configuration.getString(CK_BROKER_URL);
         final int threadPoolSize = (int) configuration.getInt(CK_THREADS);
-        final AsyncMQTTClientListener listener = new AsyncMQTTClientListener(processBuffer, this, metricRegistry);
+        final AsyncMQTTClientListener listener = new AsyncMQTTClientListener(processBuffer, this,
+                buildSubscriptions(), metricRegistry);
 
         return new AsyncMqttClient(brokerUrl, listener, threadPoolSize, buildClientConfiguration());
     }
