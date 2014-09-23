@@ -5,6 +5,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
+import com.google.common.hash.Hashing;
 import net.sf.xenqtt.client.AsyncMqttClient;
 import net.sf.xenqtt.client.MqttClient;
 import net.sf.xenqtt.client.MqttClientConfig;
@@ -99,7 +100,7 @@ public class MQTTInput extends MessageInput {
             client = buildClient(processBuffer);
         }
 
-        final String clientId = "graylog2-" + nodeId.toString();
+        final String clientId = "graylog2_" + Hashing.murmur3_32().hashUnencodedChars(nodeId.toString()).toString();
         try {
             final ConnectReturnCode returnCode;
             if (configuration.getBoolean(CK_USE_AUTH)) {
