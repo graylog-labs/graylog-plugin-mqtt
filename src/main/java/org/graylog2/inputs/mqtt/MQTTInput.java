@@ -110,7 +110,7 @@ public class MQTTInput extends MessageInput {
                 returnCode = client.connect(clientId, true);
             }
 
-            if (returnCode != ConnectReturnCode.ACCEPTED) {
+            if (returnCode != null) {
                 LOG.error("Unable to connect to the MQTT broker. Reason: " + returnCode);
                 return;
             }

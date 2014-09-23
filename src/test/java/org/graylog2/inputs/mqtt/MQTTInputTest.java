@@ -7,7 +7,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import net.sf.xenqtt.client.MqttClient;
 import net.sf.xenqtt.client.Subscription;
-import net.sf.xenqtt.message.ConnectReturnCode;
 import net.sf.xenqtt.message.QoS;
 import org.graylog2.plugin.buffers.Buffer;
 import org.graylog2.plugin.configuration.Configuration;
@@ -131,8 +130,7 @@ public class MQTTInputTest {
         final MqttClient client = mock(MqttClient.class);
         final Buffer processBuffer = mock(Buffer.class);
         final MQTTInput input = new MQTTInput(new MetricRegistry(), nodeId, client, null);
-        when(client.connect("graylog2-" + nodeId, true, "TEST-username", "TEST-password"))
-                .thenReturn(ConnectReturnCode.ACCEPTED);
+        when(client.connect("graylog2-" + nodeId, true, "TEST-username", "TEST-password")).thenReturn(null);
 
         input.initialize(configuration);
         input.setConfiguration(VALID_CONFIGURATION);
@@ -152,13 +150,21 @@ public class MQTTInputTest {
 
     @Test
     public void testLaunch() throws MisfireException {
-        final Configuration configuration = new Configuration(VALID_CONFIG_MAP);
+        final ImmutableMap<String, Object> configMap = ImmutableMap.<String, Object>builder()
+                            .put("brokerUrl", "tcp://iot.eclipse.org:1883")
+                            .put("useAuth", false)
+                            .put("topics", "graylog2-mqtt-input-" + this.getClass().getSimpleName())
+                            .put("threads", 5)
+                            .put("timeout", 1000)
+                            .put("keepalive", 1000)
+                            .build();
+        final Configuration configuration = new Configuration(configMap);
         final Buffer processBuffer = mock(Buffer.class);
         final MQTTInput input = new MQTTInput(new MetricRegistry(), nodeId);
 
         input.initialize(configuration);
-        // TODO embedded MQTT broker / integration test
-        // input.launch(processBuffer);
+        input.setConfiguration(configuration);
+        input.launch(processBuffer);
     }
 
     @Test

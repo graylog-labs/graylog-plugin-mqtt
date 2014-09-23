@@ -101,7 +101,7 @@ public class AsyncMQTTClientListener implements AsyncClientListener {
         }
 
         try {
-            LOG.debug("Parsed message successfully, message id: <{}>. Enqueuing into process buffer.", gelfMessage.getId());
+            LOG.debug("Parsed message successfully, message id: <{}>. Inserting into process buffer.", gelfMessage.getId());
             gelfMessage.addField("_mqtt_topic", message.getTopic());
             gelfMessage.addField("_mqtt_received_timestamp", message.getReceivedTimestamp());
             processBuffer.insertFailFast(gelfMessage, messageInput);
