@@ -2,7 +2,7 @@
 [![Build Status](https://travis-ci.org/Graylog2/graylog2-input-mqtt.svg?branch=master)](https://travis-ci.org/Graylog2/graylog2-input-mqtt)
 
 This is an input plugin that allows you to subscribe to an [MQTT](http://mqtt.org) broker and index all published messages.
-It _requires_ a recent Graylog2 server (0.21 or higher)
+It _requires_ a recent Graylog2 server (0.90 or higher)
 
 Getting started for users
 -------------------------
