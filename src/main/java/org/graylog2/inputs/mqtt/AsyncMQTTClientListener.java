@@ -7,12 +7,8 @@ import net.sf.xenqtt.client.MqttClient;
 import net.sf.xenqtt.client.PublishMessage;
 import net.sf.xenqtt.client.Subscription;
 import net.sf.xenqtt.message.ConnectReturnCode;
-import org.graylog2.inputs.gelf.gelf.GELFParser;
-import org.graylog2.plugin.Message;
-import org.graylog2.plugin.buffers.Buffer;
-import org.graylog2.plugin.buffers.BufferOutOfCapacityException;
-import org.graylog2.plugin.buffers.ProcessingDisabledException;
 import org.graylog2.plugin.inputs.MessageInput;
+import org.graylog2.plugin.journal.RawMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,23 +20,18 @@ import static com.codahale.metrics.MetricRegistry.name;
 public class AsyncMQTTClientListener implements AsyncClientListener {
     private static final Logger LOG = LoggerFactory.getLogger(AsyncMQTTClientListener.class);
 
-    private final Buffer processBuffer;
     private final MessageInput messageInput;
     private final List<Subscription> subscriptions;
-    private final GELFParser gelfParser;
 
     private final Meter incomingMessages;
     private final Meter incompleteMessages;
     private final Meter processedMessages;
 
-    public AsyncMQTTClientListener(final Buffer processBuffer,
-                                   final MessageInput messageInput,
+    public AsyncMQTTClientListener(final MessageInput messageInput,
                                    final List<Subscription> subscriptions,
                                    final MetricRegistry metricRegistry) {
-        this.processBuffer = processBuffer;
         this.messageInput = messageInput;
         this.subscriptions = subscriptions;
-        this.gelfParser = new GELFParser(metricRegistry);
 
         final String metricName = messageInput.getUniqueReadableId();
 
@@ -99,26 +90,12 @@ public class AsyncMQTTClientListener implements AsyncClientListener {
             return;
         }
 
-        final Message gelfMessage;
-        try {
-            gelfMessage = gelfParser.parse(message.getPayloadString(), messageInput);
-        } catch (Exception e) {
-            LOG.warn("Unable to parse received message: {}", message);
-            incompleteMessages.mark();
-            return;
-        }
+        final RawMessage rawMessage = new RawMessage(message.getPayload());
 
-        try {
-            LOG.debug("Parsed message successfully, message id: <{}>. Inserting into process buffer.", gelfMessage.getId());
-            gelfMessage.addField("_mqtt_topic", message.getTopic());
-            gelfMessage.addField("_mqtt_received_timestamp", message.getReceivedTimestamp());
-            processBuffer.insertFailFast(gelfMessage, messageInput);
-            message.ack();
-            processedMessages.mark();
-        } catch (BufferOutOfCapacityException | ProcessingDisabledException e) {
-            LOG.error("Unable to insert message into process buffer: ", e);
-            incompleteMessages.mark();
-        }
+        LOG.debug("Parsed message successfully, message id: <{}>.", rawMessage.getId());
+        messageInput.processRawMessage(rawMessage);
+        message.ack();
+        processedMessages.mark();
     }
 
     @Override

@@ -8,7 +8,7 @@ import java.net.URI;
 public class MQTTInputMetadata implements PluginMetaData {
     @Override
     public String getUniqueId() {
-        return MQTTInput.class.getCanonicalName();
+        return MQTTGELFInput.class.getCanonicalName();
     }
 
     @Override
