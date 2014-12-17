@@ -16,6 +16,7 @@ import org.graylog2.plugin.buffers.Buffer;
 import org.graylog2.plugin.configuration.Configuration;
 import org.graylog2.plugin.configuration.ConfigurationException;
 import org.graylog2.plugin.configuration.ConfigurationRequest;
+import org.graylog2.plugin.configuration.fields.BooleanField;
 import org.graylog2.plugin.configuration.fields.ConfigurationField;
 import org.graylog2.plugin.configuration.fields.NumberField;
 import org.graylog2.plugin.configuration.fields.TextField;
@@ -160,11 +161,10 @@ public class MQTTInput extends MessageInput {
                 "tcp://localhost:1883",
                 "This is the URL of the MQTT broker."));
 
-        cr.addField(new TextField(CK_USE_AUTH,
-                "Username",
-                "",
-                "This is the username for connecting to the MQTT broker.",
-                ConfigurationField.Optional.OPTIONAL));
+        cr.addField(new BooleanField(CK_USE_AUTH,
+                "Use Authentication",
+                false,
+                "This is the username for connecting to the MQTT broker."));
 
         cr.addField(new TextField(CK_USERNAME,
                 "Username",
