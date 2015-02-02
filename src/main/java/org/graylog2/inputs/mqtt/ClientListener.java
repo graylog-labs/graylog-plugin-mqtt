@@ -2,8 +2,8 @@ package org.graylog2.inputs.mqtt;
 
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
-import net.sf.xenqtt.client.AsyncClientListener;
 import net.sf.xenqtt.client.MqttClient;
+import net.sf.xenqtt.client.MqttClientListener;
 import net.sf.xenqtt.client.PublishMessage;
 import net.sf.xenqtt.client.Subscription;
 import net.sf.xenqtt.message.ConnectReturnCode;
@@ -17,8 +17,8 @@ import java.util.List;
 
 import static com.codahale.metrics.MetricRegistry.name;
 
-public class AsyncMQTTClientListener implements AsyncClientListener {
-    private static final Logger LOG = LoggerFactory.getLogger(AsyncMQTTClientListener.class);
+public class ClientListener implements MqttClientListener {
+    private static final Logger LOG = LoggerFactory.getLogger(ClientListener.class);
 
     private final MessageInput messageInput;
     private final List<Subscription> subscriptions;
@@ -27,9 +27,9 @@ public class AsyncMQTTClientListener implements AsyncClientListener {
     private final Meter incompleteMessages;
     private final Meter processedMessages;
 
-    public AsyncMQTTClientListener(final MessageInput messageInput,
-                                   final List<Subscription> subscriptions,
-                                   final MetricRegistry metricRegistry) {
+    public ClientListener(final MessageInput messageInput,
+                          final List<Subscription> subscriptions,
+                          final MetricRegistry metricRegistry) {
         this.messageInput = messageInput;
         this.subscriptions = subscriptions;
 
@@ -40,37 +40,14 @@ public class AsyncMQTTClientListener implements AsyncClientListener {
         this.processedMessages = metricRegistry.meter(name(metricName, "processedMessages"));
     }
 
-    @Override
     public void connected(MqttClient client, ConnectReturnCode returnCode) {
         if (returnCode == ConnectReturnCode.ACCEPTED) {
-            LOG.info("Connected MQTT client");
+            LOG.debug("Connected MQTT client");
 
             client.subscribe(subscriptions);
         } else {
             LOG.error("MQTT client not connected! Reason: {}", returnCode);
         }
-    }
-
-    @Override
-    public void subscribed(final MqttClient mqttClient,
-                           final Subscription[] requestedSubscriptions,
-                           final Subscription[] grantedSubscriptions,
-                           final boolean requestsGranted) {
-        if (!requestsGranted) {
-            LOG.warn("Couldn't subscribe to all requested topics: {}", Arrays.toString(requestedSubscriptions));
-        }
-
-        LOG.info("Subscribed to topics: {}", Arrays.toString(grantedSubscriptions));
-    }
-
-    @Override
-    public void unsubscribed(MqttClient mqttClient, String[] topics) {
-        LOG.info("Unsubscribed from topics: {}", Arrays.toString(topics));
-    }
-
-    @Override
-    public void published(MqttClient mqttClient, PublishMessage message) {
-        LOG.trace("Published message {}", message);
     }
 
     @Override
@@ -100,6 +77,6 @@ public class AsyncMQTTClientListener implements AsyncClientListener {
 
     @Override
     public void disconnected(final MqttClient client, final Throwable cause, final boolean reconnecting) {
-        LOG.info("Disconnected MQTT client", cause);
+        LOG.debug("Disconnected MQTT client", cause);
     }
 }

@@ -64,7 +64,7 @@ public class Main {
         MqttClient client = new AsyncMqttClient("tcp://localhost:1883", listener, 5);
         try {
             // Connect to the broker. We will await the return code so that we know whether or not we can even begin publishing.
-            client.connect("musicProducerAsync", false, "music-user", "music-pass");
+            client.connect("testProducer", false, "user", "pass");
             connectLatch.await();
 
             ConnectReturnCode returnCode = connectReturnCode.get();
@@ -75,7 +75,7 @@ public class Main {
             }
 
             // Publish a musical catalog
-            client.publish(new PublishMessage("cluster/system/logs", QoS.AT_MOST_ONCE, "{\"version\":\"1.1\",\"host\":\"example.org\",\"short_message\":\"A short message that helps you identify what is going on\",\"full_message\":\"Backtrace here\\n\\nmore stuff\",\"timestamp\":1397484488.3072,\"level\":1,\"_user_id\":9001,\"_some_info\":\"foo\",\"_some_env_var\":\"bar\"}"));
+            client.publish(new PublishMessage("cluster/system/logs", QoS.AT_MOST_ONCE, "{\"version\":\"1.1\",\"host\":\"example.org\",\"short_message\":\"A short message that helps you identify what is going on\",\"full_message\":\"Backtrace here\\n\\nmore stuff\",\"timestamp\":" + System.currentTimeMillis()/1000 + ",\"level\":1,\"_user_id\":9001,\"_some_info\":\"foo\",\"_some_env_var\":\"bar\"}"));
         } catch (Exception ex) {
             log.error("An exception prevented the publishing of the full catalog.", ex);
         } finally {

@@ -7,14 +7,19 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.hash.Hashing;
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
-import net.sf.xenqtt.client.AsyncMqttClient;
+import net.sf.xenqtt.MqttCommandCancelledException;
+import net.sf.xenqtt.MqttInterruptedException;
+import net.sf.xenqtt.MqttInvocationError;
+import net.sf.xenqtt.MqttInvocationException;
+import net.sf.xenqtt.MqttTimeoutException;
 import net.sf.xenqtt.client.MqttClient;
 import net.sf.xenqtt.client.MqttClientConfig;
+import net.sf.xenqtt.client.MqttClientListener;
 import net.sf.xenqtt.client.Subscription;
+import net.sf.xenqtt.client.SyncMqttClient;
 import net.sf.xenqtt.message.ConnectReturnCode;
 import net.sf.xenqtt.message.QoS;
 import org.graylog2.plugin.ServerStatus;
-import org.graylog2.plugin.buffers.Buffer;
 import org.graylog2.plugin.configuration.Configuration;
 import org.graylog2.plugin.configuration.ConfigurationRequest;
 import org.graylog2.plugin.configuration.fields.BooleanField;
@@ -46,6 +51,7 @@ public class MQTTTransport implements Transport {
 
     private final Configuration configuration;
     private final MetricRegistry metricRegistry;
+    private final String clientId;
     private ServerStatus serverStatus;
     private MqttClient client;
     private List<String> topics;
@@ -58,6 +64,7 @@ public class MQTTTransport implements Transport {
         this.configuration = configuration;
         this.metricRegistry = metricRegistry;
         this.serverStatus = serverStatus;
+        this.clientId = "graylog2_" + Hashing.murmur3_32().hashUnencodedChars(this.serverStatus.getNodeId().toString()).toString();
     }
 
     @Override
@@ -71,11 +78,10 @@ public class MQTTTransport implements Transport {
             topics = buildTopicList();
         }
 
-        if (client == null) {
-            client = buildClient(messageInput);
-        }
+        final ClientListener listener = new ClientListener(messageInput, buildSubscriptions(), metricRegistry);
 
-        final String clientId = "graylog2_" + Hashing.murmur3_32().hashUnencodedChars(this.serverStatus.getNodeId().toString()).toString();
+        client = buildClient(listener);
+
         try {
             final ConnectReturnCode returnCode;
             if (configuration.getBoolean(CK_USE_AUTH)) {
@@ -86,11 +92,17 @@ public class MQTTTransport implements Transport {
                 returnCode = client.connect(clientId, true);
             }
 
-            if (returnCode != null) {
-                LOG.error("Unable to connect to the MQTT broker. Reason: " + returnCode);
+            if (returnCode != null && returnCode != ConnectReturnCode.ACCEPTED) {
+                final String errorMsg = "Unable to connect to the MQTT broker. Reason: " + returnCode;
+                LOG.error(errorMsg);
+                throw new MisfireException(errorMsg);
             }
+
+            listener.connected(client, returnCode);
         } catch (Exception ex) {
-            LOG.error("An unexpected exception has occurred.", ex);
+            final String msg = "An unexpected exception has occurred.";
+            LOG.error(msg, ex);
+            throw new MisfireException(msg, ex);
         }
     }
 
@@ -103,12 +115,11 @@ public class MQTTTransport implements Transport {
         return subscriptions.build();
     }
 
-    private MqttClient buildClient(MessageInput messageInput) {
+    private MqttClient buildClient(MqttClientListener listener) {
         final String brokerUrl = configuration.getString(CK_BROKER_URL);
-        final int threadPoolSize = (int) configuration.getInt(CK_THREADS);
-        final AsyncMQTTClientListener listener = new AsyncMQTTClientListener(messageInput, buildSubscriptions(), metricRegistry);
+        final int threadPoolSize = configuration.getInt(CK_THREADS);
 
-        return new AsyncMqttClient(brokerUrl, listener, threadPoolSize, buildClientConfiguration());
+        return new SyncMqttClient(brokerUrl, listener, threadPoolSize, buildClientConfiguration());
     }
 
     private List<String> buildTopicList() {
@@ -121,14 +132,22 @@ public class MQTTTransport implements Transport {
 
     private MqttClientConfig buildClientConfiguration() {
         return new MqttClientConfig()
-                .setConnectTimeoutSeconds((int) configuration.getInt(CK_TIMEOUT))
-                .setKeepAliveSeconds((int) configuration.getInt(CK_KEEPALIVE));
+                .setConnectTimeoutSeconds(configuration.getInt(CK_TIMEOUT))
+                .setKeepAliveSeconds(configuration.getInt(CK_KEEPALIVE));
     }
 
     @Override
     public void stop() {
-        client.unsubscribe(topics);
-        client.disconnect();
+        if (client != null && !client.isClosed()) {
+            try {
+                //client.unsubscribe(topics);
+                client.disconnect();
+            } catch (MqttCommandCancelledException | MqttTimeoutException | MqttInterruptedException | MqttInvocationException | MqttInvocationError e) {
+                LOG.warn("Unable to do a clean disconnect from broker: ", e);
+                if (!client.isClosed())
+                    client.close();
+            }
+        }
     }
 
 
@@ -143,7 +162,7 @@ public class MQTTTransport implements Transport {
         MQTTTransport create(Configuration configuration);
 
         @Override
-        Transport.Config getConfig();
+        Config getConfig();
     }
 
     @ConfigClass
