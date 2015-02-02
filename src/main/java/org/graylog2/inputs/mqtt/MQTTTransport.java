@@ -82,8 +82,8 @@ public class MQTTTransport implements Transport {
 
         client = buildClient(listener);
 
+        final ConnectReturnCode returnCode;
         try {
-            final ConnectReturnCode returnCode;
             if (configuration.getBoolean(CK_USE_AUTH)) {
                 final String username = configuration.getString(CK_USERNAME);
                 final String password = configuration.getString(CK_PASSWORD);
@@ -91,19 +91,19 @@ public class MQTTTransport implements Transport {
             } else {
                 returnCode = client.connect(clientId, true);
             }
-
-            if (returnCode != null && returnCode != ConnectReturnCode.ACCEPTED) {
-                final String errorMsg = "Unable to connect to the MQTT broker. Reason: " + returnCode;
-                LOG.error(errorMsg);
-                throw new MisfireException(errorMsg);
-            }
-
-            listener.connected(client, returnCode);
         } catch (Exception ex) {
             final String msg = "An unexpected exception has occurred.";
             LOG.error(msg, ex);
             throw new MisfireException(msg, ex);
         }
+
+        if (returnCode != null && returnCode != ConnectReturnCode.ACCEPTED) {
+            final String errorMsg = "Unable to connect to the MQTT broker. Reason: " + returnCode;
+            LOG.error(errorMsg);
+            throw new MisfireException(errorMsg);
+        }
+
+        listener.connected(client, returnCode);
     }
 
     private List<Subscription> buildSubscriptions() {
