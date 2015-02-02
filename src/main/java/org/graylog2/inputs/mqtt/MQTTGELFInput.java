@@ -46,7 +46,7 @@ public class MQTTGELFInput extends MessageInput {
                          LocalMetricRegistry localRegistry,
                          Config config,
                          Descriptor descriptor, ServerStatus serverStatus) {
-        super(metricRegistry, configuration, mqttTransportFactory.create(configuration), localRegistry, gelfCodecFactory.create(configuration), config, descriptor, serverStatus);
+        super(metricRegistry, mqttTransportFactory.create(configuration), localRegistry, gelfCodecFactory.create(configuration), config, descriptor, serverStatus);
     }
 
     public interface Factory extends MessageInput.Factory<MQTTGELFInput> {

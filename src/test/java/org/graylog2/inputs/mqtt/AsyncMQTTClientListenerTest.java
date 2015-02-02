@@ -6,6 +6,7 @@ import net.sf.xenqtt.client.PublishMessage;
 import net.sf.xenqtt.client.Subscription;
 import net.sf.xenqtt.message.ConnectReturnCode;
 import net.sf.xenqtt.message.QoS;
+import org.graylog2.plugin.Message;
 import org.graylog2.plugin.buffers.Buffer;
 import org.graylog2.plugin.buffers.BufferOutOfCapacityException;
 import org.graylog2.plugin.buffers.ProcessingDisabledException;
@@ -15,6 +16,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Matchers;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
@@ -27,11 +29,12 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assume.assumeThat;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
-public class ClientListenerTest {
+public class AsyncMQTTClientListenerTest {
 
     @Mock
     private Buffer processBuffer;
@@ -40,7 +43,7 @@ public class ClientListenerTest {
     @Mock
     private MqttClient client;
 
-    private ClientListener listener;
+    private AsyncMQTTClientListener listener;
     private MetricRegistry metricRegistry;
 
     @Before
@@ -48,8 +51,13 @@ public class ClientListenerTest {
         when(messageInput.getUniqueReadableId()).thenReturn("test");
 
         metricRegistry = new MetricRegistry();
-        listener = new ClientListener(messageInput,
+        listener = new AsyncMQTTClientListener(messageInput,
                 Collections.singletonList(new Subscription("test", QoS.AT_LEAST_ONCE)), metricRegistry);
+    }
+
+    @Test
+    public void testConnected() {
+        listener.connected(client, ConnectReturnCode.ACCEPTED);
     }
 
     @Test
@@ -66,6 +74,38 @@ public class ClientListenerTest {
         final List<Subscription> subscriptions = argumentCaptor.getValue();
         assertThat(subscriptions.get(0).getTopic(), equalTo("test"));
         assertThat(subscriptions.get(0).getQos(), equalTo(QoS.AT_LEAST_ONCE));
+    }
+
+    @Test
+    public void testSubscribedSuccessfully() {
+        final Subscription[] subscriptions = new Subscription[]{
+                new Subscription("test", QoS.EXACTLY_ONCE)
+        };
+
+        listener.subscribed(client, subscriptions, subscriptions, true);
+    }
+
+    @Test
+    public void testSubscribedUnsuccessfully() {
+        final Subscription[] requestedSubscriptions = new Subscription[]{
+                new Subscription("test1", QoS.EXACTLY_ONCE),
+                new Subscription("test2", QoS.EXACTLY_ONCE),
+        };
+        final Subscription[] grantedSubscriptions = new Subscription[]{
+                new Subscription("test1", QoS.EXACTLY_ONCE)
+        };
+
+        listener.subscribed(client, requestedSubscriptions, grantedSubscriptions, false);
+    }
+
+    @Test
+    public void testUnsubscribed() {
+        listener.unsubscribed(client, new String[]{"test"});
+    }
+
+    @Test
+    public void testPublished() {
+        listener.published(client, new PublishMessage("test", QoS.EXACTLY_ONCE, ""));
     }
 
     @Test
