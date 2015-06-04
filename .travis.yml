@@ -8,7 +8,7 @@ addons:
       - rpm
 before_deploy:
   - mvn jdeb:jdeb && export RELEASE_DEB_FILE=$(ls target/*.deb)
-  - mvn rpm:rpm && export RELEASE_RPM_FILE=$(ls target/rpm/graylog2-input-mqtt/RPMS/noarch/graylog-input-mqtt-*.rpm)
+  - mvn rpm:rpm && export RELEASE_RPM_FILE=$(ls target/rpm/graylog-input-mqtt/RPMS/noarch/graylog-input-mqtt-*.rpm)
   - export RELEASE_PKG_FILE=$(ls target/graylog2-input-mqtt-*.jar)
   - echo "Deploying release to GitHub releases"
 deploy:
