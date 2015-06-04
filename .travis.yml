@@ -2,3 +2,25 @@ language: java
 jdk:
   - oraclejdk7
   - oraclejdk8
+addons:
+  apt:
+    packages:
+      - rpm
+before_deploy:
+  - mvn jdeb:jdeb && export RELEASE_DEB_FILE=$(ls target/*.deb)
+  - mvn rpm:rpm && export RELEASE_RPM_FILE=$(ls target/rpm/graylog2-input-mqtt/RPMS/noarch/graylog2-input-mqtt-*.rpm)
+  - export RELEASE_PKG_FILE=$(ls target/graylog2-input-mqtt-*.jar)
+  - echo "Deploying release to GitHub releases"
+deploy:
+  provider: releases
+  api_key:
+    secure: "WQ5IV2Q3wzBhGu98lGAW6mwpb2NR7Zn2GVqqsQ5EvvXb/+5A0GQltEI9AnqD2iDiI7cAfT4TXZAqxcQMPhz79Z+A8NsxP0LQo9/DO6fc7dH5DygjSZ9nuLRkMphCf8EOqWbwi1q1itSGH9VY3NwqpR6QxrV+7rjGKY0b1tacOxs="
+  file: 
+    - "${RELEASE_PKG_FILE}"
+    - "${RELEASE_DEB_FILE}"
+    - "${RELEASE_RPM_FILE}"
+  skip_cleanup: true
+  on:
+    tags: true
+    jdk: oraclejdk7
+
