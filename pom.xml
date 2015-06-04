@@ -6,7 +6,7 @@
 
     <groupId>org.graylog2</groupId>
     <artifactId>graylog2-input-mqtt</artifactId>
-    <version>1.0.0-rc.2</version>
+    <version>1.0.2</version>
 
     <name>graylog2-input-mqtt</name>
     <description>Graylog2 MQTT Input plugin</description>
@@ -22,7 +22,7 @@
         <maven.compiler.source>1.7</maven.compiler.source>
         <maven.compiler.target>1.7</maven.compiler.target>
         <graylog2.plugin-dir>/usr/share/graylog2-server/plugin</graylog2.plugin-dir>
-        <graylog2.version>1.0.0-rc.2</graylog2.version>
+        <graylog2.version>1.0.2</graylog2.version>
     </properties>
 
     <repositories>
