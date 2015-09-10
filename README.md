@@ -1,14 +1,37 @@
-# Graylog MQTT Input Plugin
-[![Build Status](https://travis-ci.org/Graylog2/graylog2-input-mqtt.svg?branch=v1.1.0)](https://travis-ci.org/Graylog2/graylog2-input-mqtt)
+MQTT Plugin for Graylog
+=======================
+
+[![Build Status](https://travis-ci.org/Graylog2/graylog-plugin-mqtt.svg)](https://travis-ci.org/Graylog2/graylog-plugin-mqtt)
 
 This is an input plugin that allows you to subscribe to an [MQTT](http://mqtt.org) broker and index all published messages.
-It _requires_ a recent Graylog server (1.0.0 or higher)
 
-Getting started for users
--------------------------
+**Required Graylog version:** 1.0 and later
 
-* Clone this repository
-* run `mvn package` to build a jar file.
-* Copy generated jar file in target directory to your Graylog server plugin directory
-* Restart Graylog server
-* Create a new MQTT Input in the Graylog web interface
+## Installation
+
+[Download the plugin](https://github.com/Graylog2/graylog-plugin-mqtt/releases)
+and place the `.jar` file in your Graylog plugin directory. The plugin directory
+is the `plugins/` folder relative from your `graylog-server` directory by default
+and can be configured in your `graylog.conf` file.
+
+Restart `graylog-server` and you are done.
+
+## Build
+
+This project is using Maven and requires Java 7 or higher.
+
+You can build a plugin (JAR) with `mvn package`.
+
+DEB and RPM packages can be build with `mvn jdeb:jdeb` and `mvn rpm:rpm` respectively.
+
+## Plugin Release
+
+We are using the maven release plugin:
+
+```
+$ mvn release:prepare
+[...]
+$ mvn release:perform
+```
+
+This sets the version numbers, creates a tag and pushes to GitHub. TravisCI will build the release artifacts and upload to GitHub automatically.
