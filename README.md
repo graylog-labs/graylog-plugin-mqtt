@@ -5,7 +5,7 @@ MQTT Plugin for Graylog
 
 This is an input plugin that allows you to subscribe to an [MQTT](http://mqtt.org) broker and index all published messages.
 
-**Required Graylog version:** 1.0 and later
+**Required Graylog version:** 2.0.0 and later
 
 ## Installation
 
@@ -18,7 +18,7 @@ Restart `graylog-server` and you are done.
 
 ## Build
 
-This project is using Maven and requires Java 7 or higher.
+This project is using Maven 3 and requires Java 8 or higher.
 
 You can build a plugin (JAR) with `mvn package`.
 
@@ -34,4 +34,4 @@ $ mvn release:prepare
 $ mvn release:perform
 ```
 
-This sets the version numbers, creates a tag and pushes to GitHub. TravisCI will build the release artifacts and upload to GitHub automatically.
+This sets the version numbers, creates a tag and pushes to GitHub. Travis CI will build the release artifacts and upload to GitHub automatically.
