@@ -1,7 +1,9 @@
 MQTT Plugin for Graylog
 =======================
 
-[![Build Status](https://travis-ci.org/Graylog2/graylog-plugin-mqtt.svg)](https://travis-ci.org/Graylog2/graylog-plugin-mqtt)
+[![Github Downloads](https://img.shields.io/github/downloads/graylog-labs/graylog-plugin-mqtt/total.svg)](https://github.com/graylog-labs/graylog-plugin-mqtt/releases)
+[![GitHub Release](https://img.shields.io/github/release/graylog-labs/graylog-plugin-mqtt.svg)](https://github.com/graylog-labs/graylog-plugin-mqtt/releases)
+[![Build Status](https://travis-ci.org/graylog-labs/graylog-plugin-mqtt.svg)](https://travis-ci.org/graylog-labs/graylog-plugin-mqtt)
 
 This is an input plugin that allows you to subscribe to an [MQTT](http://mqtt.org) broker and index all published messages.
 
@@ -9,7 +11,7 @@ This is an input plugin that allows you to subscribe to an [MQTT](http://mqtt.or
 
 ## Installation
 
-[Download the plugin](https://github.com/Graylog2/graylog-plugin-mqtt/releases)
+[Download the plugin](https://github.com/graylog-labs/graylog-plugin-mqtt/releases)
 and place the `.jar` file in your Graylog plugin directory. The plugin directory
 is the `plugins/` folder relative from your `graylog-server` directory by default
 and can be configured in your `graylog.conf` file.
