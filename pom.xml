@@ -9,7 +9,7 @@
     </parent>
 
     <artifactId>graylog-plugin-mqtt</artifactId>
-    <version>1.2.0-rc.1</version>
+    <version>1.2.0-rc.2-SNAPSHOT</version>
 
     <name>${project.artifactId}</name>
     <description>Graylog MQTT Input plugin</description>
@@ -24,7 +24,7 @@
         <connection>scm:git:git@github.com:graylog-labs/graylog-plugin-mqtt.git</connection>
         <developerConnection>scm:git:git@github.com:graylog-labs/graylog-plugin-mqtt.git</developerConnection>
         <url>https://github.com/graylog-labs/graylog-plugin-mqtt</url>
-        <tag>1.2.0-rc.1</tag>
+        <tag>HEAD</tag>
     </scm>
 
     <properties>
