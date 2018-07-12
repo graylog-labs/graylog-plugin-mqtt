@@ -7,7 +7,7 @@ MQTT Plugin for Graylog
 
 This is an input plugin that allows you to subscribe to an [MQTT](http://mqtt.org) broker and index all published messages.
 
-**Required Graylog version:** 2.0.0 and later
+**Required Graylog version:** 2.4.0 and later
 
 ## Installation
 

@@ -5,7 +5,10 @@ import org.graylog2.plugin.PluginModule;
 public class MQTTInputModule extends PluginModule {
     @Override
     protected void configure() {
-        installTransport(transportMapBinder(), "mqtt-transport", MQTTTransport.class);
-        installInput(inputsMapBinder(), MQTTGELFInput.class, MQTTGELFInput.Factory.class);
+        addTransport("mqtt-transport", MQTTTransport.class, MQTTTransport.Config.class, MQTTTransport.Factory.class);
+
+        addMessageInput(MQTTGELFInput.class, MQTTGELFInput.Factory.class);
+        addMessageInput(MQTTRawInput.class, MQTTRawInput.Factory.class);
+        addMessageInput(MQTTSyslogInput.class, MQTTSyslogInput.Factory.class);
     }
 }

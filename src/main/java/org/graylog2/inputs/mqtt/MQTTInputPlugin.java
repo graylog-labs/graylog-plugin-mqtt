@@ -15,6 +15,7 @@ public class MQTTInputPlugin implements Plugin {
         return new MQTTInputMetadata();
     }
 
+    @Override
     public Collection<PluginModule> modules() {
         return ImmutableSet.<PluginModule>of(new MQTTInputModule());
     }

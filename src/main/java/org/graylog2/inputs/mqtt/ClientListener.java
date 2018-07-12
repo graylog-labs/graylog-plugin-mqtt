@@ -2,17 +2,16 @@ package org.graylog2.inputs.mqtt;
 
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
-import net.sf.xenqtt.client.MqttClient;
-import net.sf.xenqtt.client.MqttClientListener;
-import net.sf.xenqtt.client.PublishMessage;
-import net.sf.xenqtt.client.Subscription;
-import net.sf.xenqtt.message.ConnectReturnCode;
+import net.xenqtt.client.MqttClient;
+import net.xenqtt.client.MqttClientListener;
+import net.xenqtt.client.PublishMessage;
+import net.xenqtt.client.Subscription;
+import net.xenqtt.message.ConnectReturnCode;
 import org.graylog2.plugin.inputs.MessageInput;
 import org.graylog2.plugin.journal.RawMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Arrays;
 import java.util.List;
 
 import static com.codahale.metrics.MetricRegistry.name;

@@ -1,22 +1,22 @@
 package org.graylog2.inputs.mqtt;
 
 import com.codahale.metrics.MetricRegistry;
-import net.sf.xenqtt.client.MqttClient;
-import net.sf.xenqtt.client.PublishMessage;
-import net.sf.xenqtt.client.Subscription;
-import net.sf.xenqtt.message.ConnectReturnCode;
-import net.sf.xenqtt.message.QoS;
-import org.graylog2.plugin.buffers.Buffer;
+import net.xenqtt.client.MqttClient;
+import net.xenqtt.client.PublishMessage;
+import net.xenqtt.client.Subscription;
+import net.xenqtt.message.ConnectReturnCode;
+import net.xenqtt.message.QoS;
 import org.graylog2.plugin.buffers.BufferOutOfCapacityException;
 import org.graylog2.plugin.buffers.ProcessingDisabledException;
 import org.graylog2.plugin.inputs.MessageInput;
 import org.graylog2.plugin.inputs.MisfireException;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnit;
+import org.mockito.junit.MockitoRule;
 
 import java.util.Collections;
 import java.util.List;
@@ -25,16 +25,14 @@ import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assume.assumeThat;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-@RunWith(MockitoJUnitRunner.class)
 public class ClientListenerTest {
+    @Rule
+    public final MockitoRule mockitoRule = MockitoJUnit.rule();
 
-    @Mock
-    private Buffer processBuffer;
     @Mock
     private MessageInput messageInput;
     @Mock
