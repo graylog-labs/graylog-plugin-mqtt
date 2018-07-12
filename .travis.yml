@@ -7,21 +7,19 @@ addons:
     packages:
       - rpm
 before_deploy:
-  - mvn jdeb:jdeb && export RELEASE_DEB_FILE=$(ls target/*.deb)
-  - mvn rpm:rpm && export RELEASE_RPM_FILE=$(find target/ -name '*.rpm' | tail -1)
-  - rm -f target/original-*.jar
-  - export RELEASE_PKG_FILE=$(ls target/*.jar)
-  - echo "Deploying release to GitHub releases"
+  - find . -type f -name 'original-*.jar' -delete
+  - mvn jdeb:jdeb
+  - mvn rpm:rpm
 deploy:
   provider: releases
   api_key:
-    secure: VZIkG6BAnLSpd4SpfMTN3E1XjYa6EVC/Y/+jkNdJZuqkOMB0TQtPAl8kyqi08zkNYEcZTdhhkjMqAVPRF+7XYg8pAMzQ6CDYAU6GG1LE08P0tc78LZXS5OG0PLMsK/nxPtq3+cFut+WW83WiXBf6C+GrDePQfXcUOVQOwzBmqT8=
-  file: 
-    - "${RELEASE_PKG_FILE}"
-    - "${RELEASE_DEB_FILE}"
-    - "${RELEASE_RPM_FILE}"
+    secure: b3zAUfGwq/Q5Uu/2Q8OiVfqcx5sNBCwnAku9BddPS156mlNSzfH5sSFe0RDzzoB/XXhfFQlCJoXLrYIMvAi5ZEqC3/C3XxNIjLoWFXtivdjbkk5p2FHvJCykpFv58LzgSXxtE3EpxadehSmgX6kQJnWI4L9hLBYauRwwZcl/Vbs=
+  file_glob: true
+  file:
+    - "**/target/*.jar"
+    - "**/target/*.deb"
+    - "**/target/**/*.rpm"
   skip_cleanup: true
   on:
     tags: true
     jdk: oraclejdk8
-
