@@ -64,7 +64,7 @@ public class MQTTTransport implements Transport {
         this.configuration = configuration;
         this.metricRegistry = metricRegistry;
         this.serverStatus = serverStatus;
-        this.clientId = "graylog2_" + Hashing.murmur3_32().hashUnencodedChars(this.serverStatus.getNodeId().toString()).toString();
+        this.clientId = "graylog2_" + Hashing.murmur3_32().hashUnencodedChars(this.serverStatus.getNodeId().toString() + Math.random()).toString();
     }
 
     @Override
